@@ -1,8 +1,12 @@
+using EventApi.Models;
 using EventApi.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
+builder.Services.AddValidation();
 builder.Services.AddSingleton<IEventService, InMemoryEventService>();
 
 var app = builder.Build();
@@ -13,6 +17,43 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+var events = app.MapGroup("/events");
+
+events.MapGet("", async (IEventService service, CancellationToken cancellationToken) =>
+{
+    return TypedResults.Ok(await service.GetAllAsync(cancellationToken));
+});
+
+events.MapGet("/{id:guid}", async Task<Results<Ok<Event>, NotFound>> (
+    Guid id, IEventService service, CancellationToken cancellationToken) =>
+{
+    var foundEvent = await service.GetByIdAsync(id, cancellationToken);
+    return foundEvent is null ? TypedResults.NotFound() : TypedResults.Ok(foundEvent);
+})
+.WithName("GetEventById");
+
+events.MapPost("", async (EventRequest request, IEventService service, CancellationToken cancellationToken) =>
+{
+    var createdEvent = await service.CreateAsync(request.ToEvent(), cancellationToken);
+    return TypedResults.CreatedAtRoute(createdEvent, "GetEventById", new { id = createdEvent.Id });
+})
+.ProducesValidationProblem();
+
+events.MapPut("/{id:guid}", async Task<Results<Ok<Event>, NotFound>> (
+    Guid id, EventRequest request, IEventService service, CancellationToken cancellationToken) =>
+{
+    var storedEvent = await service.UpdateAsync(id, request.ToEvent(), cancellationToken);
+    return storedEvent is null ? TypedResults.NotFound() : TypedResults.Ok(storedEvent);
+})
+.ProducesValidationProblem();
+
+events.MapDelete("/{id:guid}", async Task<Results<NoContent, NotFound>> (
+    Guid id, IEventService service, CancellationToken cancellationToken) =>
+{
+    var deleted = await service.DeleteAsync(id, cancellationToken);
+    return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
+});
 
 var summaries = new[]
 {

@@ -4,3 +4,78 @@ GET {{EventApi_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+GET {{EventApi_HostAddress}}/events
+Accept: application/json
+
+###
+
+# @name createEvent
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+{
+  "title": "C# meetup",
+  "description": "Meet other C# developers",
+  "startAt": "2026-12-01T18:00:00Z",
+  "endAt": "2026-12-01T19:00:00Z"
+}
+
+###
+
+GET {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Accept: application/json
+
+###
+
+PUT {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "title": "ASP.NET Core meetup",
+  "description": "Build a Minimal API",
+  "startAt": "2026-12-02T19:00:00Z",
+  "endAt": "2026-12-02T20:30:00Z"
+}
+
+###
+
+# Без обязательных полей ожидается HTTP 400 с ошибками Title, StartAt и EndAt.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+{}
+
+###
+
+# При совпадении дат ожидается HTTP 400 с ошибкой EndAt.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+{
+  "title": "C# meetup",
+  "startAt": "2026-12-01T18:00:00Z",
+  "endAt": "2026-12-01T18:00:00Z"
+}
+
+###
+
+# При окончании раньше начала ожидается HTTP 400 с ошибкой EndAt.
+PUT {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "title": "ASP.NET Core meetup",
+  "startAt": "2026-12-02T19:00:00Z",
+  "endAt": "2026-12-02T18:00:00Z"
+}
+
+###
+
+DELETE {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+
+###
+
+# После удаления ожидается HTTP 404.
+GET {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Accept: application/json

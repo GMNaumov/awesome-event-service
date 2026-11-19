@@ -43,6 +43,34 @@ public class InMemoryEventService : IEventService
         return Task.FromResult(Copy(storedEvent));
     }
 
+    public Task<Event?> UpdateAsync(Guid id, Event updatedEvent, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ArgumentNullException.ThrowIfNull(updatedEvent);
+
+        lock (sync)
+        {
+            if (!events.ContainsKey(id))
+            {
+                return Task.FromResult<Event?>(null);
+            }
+
+            var storedEvent = Copy(updatedEvent);
+            storedEvent.Id = id;
+            events[id] = storedEvent;
+            return Task.FromResult<Event?>(Copy(storedEvent));
+        }
+    }
+
+    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (sync)
+        {
+            return Task.FromResult(events.Remove(id));
+        }
+    }
+
     private static Event Copy(Event source) => new()
     {
         Id = source.Id,
