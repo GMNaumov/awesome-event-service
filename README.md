@@ -20,7 +20,7 @@
 Перед запуском - перейти в корень репозитория и проверить командой `docker version`, что доступен сервер Docker с Linux. Все команды выполняется в PowerShell, Bash или Zsh (в зависимости от операционной системы). Используется образ из [конфигурации Dev Container](.devcontainer/devcontainer.json), подключает исходники в `/workspace` и публикует порт `5247` на хосте.
 
 ```sh
-docker run --rm -it --mount "type=bind,source=$PWD,target=/workspace" --workdir /workspace --publish 127.0.0.1:5247:5247 --entrypoint bash mcr.microsoft.com/devcontainers/dotnet:1-10.0
+docker run --rm -it --mount "type=bind,source=$PWD,target=/workspace" --workdir /workspace --publish 127.0.0.1:5247:5247 --entrypoint bash mcr.microsoft.com/devcontainers/dotnet:10.0-noble
 ```
 
 В открывшейся оболочке контейнера выполнить команду для сборки проект и запуска API в окружении `Development`, в котором доступны Swagger UI и OpenAPI. `dotnet build` также восстановит зависимости NuGet.

@@ -1,5 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using EventApi.Events;
+using EventApi.Events.Contracts;
+using EventApi.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.Net.Http.Headers;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
