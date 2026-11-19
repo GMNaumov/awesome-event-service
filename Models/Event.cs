@@ -2,9 +2,9 @@ namespace EventApi.Models;
 
 public class Event
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public DateTime StartAt { get; set; }
-    public DateTime EndAt { get; set; }
+    public Guid Id { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string? Description { get; init; }
+    public DateTime StartAt { get; init; }
+    public DateTime EndAt { get; init; }
 }
