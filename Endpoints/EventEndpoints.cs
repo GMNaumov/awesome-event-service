@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using System.Text.Json;
 using EventApi.Dtos;
 using EventApi.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -38,51 +38,57 @@ internal static class EventEndpoints
         return TypedResults.Ok(await service.GetAllAsync(cancellationToken));
     }
 
-    private static async Task<Results<Ok<EventResponse>, NotFound>> GetByIdAsync(
+    private static async Task<Results<Ok<EventResponse>, ProblemHttpResult>> GetByIdAsync(
         Guid id, IEventService service, CancellationToken cancellationToken)
     {
         var response = await service.GetByIdAsync(id, cancellationToken);
-        return response is null ? TypedResults.NotFound() : TypedResults.Ok(response);
+        return response is null ? EventNotFound() : TypedResults.Ok(response);
     }
 
     private static async Task<Results<CreatedAtRoute<EventResponse>, ValidationProblem>> CreateAsync(
-        EventRequest request, IEventService service, HttpContext context, CancellationToken cancellationToken)
+        EventRequest request, IEventService service, CancellationToken cancellationToken)
     {
         var result = await service.CreateAsync(request, cancellationToken);
         return result switch
         {
             EventWriteResult.Saved(var response) =>
                 TypedResults.CreatedAtRoute(response, GetEventByIdRoute, new { id = response.Id }),
-            EventWriteResult.Invalid(var errors) => ToValidationProblem(errors, context),
+            EventWriteResult.Invalid(var errors) => ToValidationProblem(errors),
             _ => throw new InvalidOperationException("Unexpected result when creating an event.")
         };
     }
 
-    private static async Task<Results<Ok<EventResponse>, NotFound, ValidationProblem>> UpdateAsync(
-        Guid id, EventRequest request, IEventService service, HttpContext context, CancellationToken cancellationToken)
+    private static async Task<Results<Ok<EventResponse>, ProblemHttpResult, ValidationProblem>> UpdateAsync(
+        Guid id, EventRequest request, IEventService service, CancellationToken cancellationToken)
     {
         var result = await service.UpdateAsync(id, request, cancellationToken);
         return result switch
         {
             EventWriteResult.Saved(var response) => TypedResults.Ok(response),
-            EventWriteResult.Invalid(var errors) => ToValidationProblem(errors, context),
-            EventWriteResult.NotFound => TypedResults.NotFound(),
+            EventWriteResult.Invalid(var errors) => ToValidationProblem(errors),
+            EventWriteResult.NotFound => EventNotFound(),
             _ => throw new InvalidOperationException("Unexpected result when updating an event.")
         };
     }
 
-    private static async Task<Results<NoContent, NotFound>> DeleteAsync(
+    private static async Task<Results<NoContent, ProblemHttpResult>> DeleteAsync(
         Guid id, IEventService service, CancellationToken cancellationToken)
     {
         var deleted = await service.DeleteAsync(id, cancellationToken);
-        return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
+        return deleted ? TypedResults.NoContent() : EventNotFound();
     }
 
-    private static ValidationProblem ToValidationProblem(Dictionary<string, string[]> errors, HttpContext context)
+    private static ProblemHttpResult EventNotFound()
     {
-        return TypedResults.ValidationProblem(errors, extensions: new Dictionary<string, object?>
-        {
-            ["traceId"] = Activity.Current?.Id ?? context.TraceIdentifier
-        });
+        return TypedResults.Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            detail: "No event exists with the specified id.");
+    }
+
+    private static ValidationProblem ToValidationProblem(Dictionary<string, string[]> errors)
+    {
+        return TypedResults.ValidationProblem(errors.ToDictionary(
+            error => JsonNamingPolicy.CamelCase.ConvertName(error.Key),
+            error => error.Value));
     }
 }

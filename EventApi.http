@@ -54,7 +54,7 @@ Content-Type: application/json
 
 ###
 
-# Без обязательных полей ожидается HTTP 400 Problem Details с полями Title, StartAt и EndAt в errors.
+# Без обязательных полей ожидается HTTP 400 с ключами title, startAt и endAt в errors.
 POST {{EventApi_HostAddress}}/events
 Content-Type: application/json
 Accept: application/problem+json
@@ -63,7 +63,7 @@ Accept: application/problem+json
 
 ###
 
-# При совпадении дат ожидается HTTP 400 с ошибкой EndAt.
+# При совпадении дат ожидается HTTP 400 с ошибкой endAt.
 POST {{EventApi_HostAddress}}/events
 Content-Type: application/json
 
@@ -75,19 +75,20 @@ Content-Type: application/json
 
 ###
 
-# Без указания часового пояса ожидается HTTP 400 с ошибкой StartAt.
+# Проверка нескольких полей сразу. Ожидается HTTP 400 с ошибками title и startAt.
 POST {{EventApi_HostAddress}}/events
 Content-Type: application/json
+Accept: text/html
 
 {
-  "title": "C# meetup",
+  "title": " ",
   "startAt": "2026-12-01T18:00:00",
   "endAt": "2026-12-01T19:00:00Z"
 }
 
 ###
 
-# При окончании раньше начала ожидается HTTP 400 с ошибкой EndAt.
+# При окончании раньше начала ожидается HTTP 400 с ошибкой endAt.
 PUT {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
 Content-Type: application/json
 
@@ -103,9 +104,26 @@ DELETE {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
 
 ###
 
-# После удаления ожидается HTTP 404 Problem Details с полем traceId.
+# После удаления ожидается HTTP 404 Problem Details. Поле detail сообщает об отсутствии события.
 GET {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
 Accept: application/problem+json
+
+###
+
+# Корректный PUT после удаления возвращает HTTP 404.
+PUT {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "title": "C# meetup",
+  "startAt": "2026-12-01T18:00:00Z",
+  "endAt": "2026-12-01T19:00:00Z"
+}
+
+###
+
+# Повторное удаление возвращает HTTP 404.
+DELETE {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
 
 ###
 
@@ -118,6 +136,20 @@ Accept: application/problem+json
 
 ###
 
+# Пустое тело возвращает HTTP 400 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+###
+
+# JSON null возвращает HTTP 400 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+null
+
+###
+
 # Неподдерживаемый тип тела запроса возвращает HTTP 415 Problem Details.
 POST {{EventApi_HostAddress}}/events
 Content-Type: text/plain
@@ -127,6 +159,27 @@ C# meetup
 
 ###
 
-# Неизвестный маршрут возвращает HTTP 404 Problem Details, в том числе при Accept: text/html.
+# Неизвестная кодировка возвращает HTTP 415 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json; charset=unknown
+
+{}
+
+###
+
+# Кодировка UTF-8 в кавычках распознаётся. Ответ HTTP 400 содержит ошибки обязательных полей.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json; charset="utf-8"
+
+{}
+
+###
+
+# Неподдерживаемый метод возвращает HTTP 405 Problem Details и заголовок Allow с GET и POST.
+PATCH {{EventApi_HostAddress}}/events
+
+###
+
+# Путь с id вне формата GUID возвращает HTTP 404. Поле detail сообщает об отсутствии маршрута.
 GET {{EventApi_HostAddress}}/events/unknown-route
 Accept: text/html

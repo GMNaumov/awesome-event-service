@@ -1,8 +1,9 @@
 using System.Diagnostics;
+using Microsoft.Extensions.Options;
 
 namespace EventApi.Errors;
 
-internal sealed class FallbackProblemDetailsWriter : IProblemDetailsWriter
+internal sealed class FallbackProblemDetailsWriter(IOptions<ProblemDetailsOptions> options) : IProblemDetailsWriter
 {
     public bool CanWrite(ProblemDetailsContext context) => true;
 
@@ -14,7 +15,10 @@ internal sealed class FallbackProblemDetailsWriter : IProblemDetailsWriter
         problem.Extensions["traceId"] = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
         var result = TypedResults.Problem(problem);
+        options.Value.CustomizeProblemDetails?.Invoke(context);
+
         return new ValueTask(httpContext.Response.WriteAsJsonAsync(
-            problem, problem.GetType(), options: null, contentType: result.ContentType));
+            problem, problem.GetType(), options: null, contentType: result.ContentType,
+            cancellationToken: httpContext.RequestAborted));
     }
 }

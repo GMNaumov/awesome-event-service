@@ -87,29 +87,26 @@ public class InMemoryEventService : IEventService
     private static Dictionary<string, string[]> Validate(EventRequest request)
     {
         var validationResults = new List<ValidationResult>();
-        if (!Validator.TryValidateObject(request, new ValidationContext(request), validationResults, validateAllProperties: true))
-        {
-            return validationResults
-                .SelectMany(result => result.MemberNames.Select(name => (Name: name, result.ErrorMessage)))
-                .GroupBy(error => error.Name)
-                .ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage!).ToArray());
-        }
+        Validator.TryValidateObject(request, new ValidationContext(request), validationResults, validateAllProperties: true);
 
-        var errors = new Dictionary<string, string[]>();
-        var startAt = request.StartAt!.Value;
-        var endAt = request.EndAt!.Value;
+        var errors = validationResults
+            .SelectMany(result => result.MemberNames.Select(name => (Name: name, result.ErrorMessage)))
+            .GroupBy(error => error.Name)
+            .ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage!).ToArray());
 
-        if (startAt.Kind == DateTimeKind.Unspecified)
+        if (request.StartAt is { Kind: DateTimeKind.Unspecified })
         {
             errors[nameof(request.StartAt)] = ["StartAt must include Z or a UTC offset."];
         }
 
-        if (endAt.Kind == DateTimeKind.Unspecified)
+        if (request.EndAt is { Kind: DateTimeKind.Unspecified })
         {
             errors[nameof(request.EndAt)] = ["EndAt must include Z or a UTC offset."];
         }
 
-        if (errors.Count == 0 && endAt.ToUniversalTime() <= startAt.ToUniversalTime())
+        if (request.StartAt is { Kind: not DateTimeKind.Unspecified } startAt &&
+            request.EndAt is { Kind: not DateTimeKind.Unspecified } endAt &&
+            endAt.ToUniversalTime() <= startAt.ToUniversalTime())
         {
             errors[nameof(request.EndAt)] = ["EndAt must be later than StartAt."];
         }
