@@ -1,10 +1,20 @@
+using System.ComponentModel.DataAnnotations;
 using EventApi.Models;
 using EventApi.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddSchemaTransformer((schema, context, _) =>
+{
+    if (context.JsonPropertyInfo?.AttributeProvider?.IsDefined(typeof(RequiredAttribute), inherit: true) == true)
+    {
+        schema.Type &= ~JsonSchemaType.Null;
+    }
+
+    return Task.CompletedTask;
+}));
 builder.Services.AddProblemDetails();
 builder.Services.AddValidation();
 builder.Services.AddSingleton<IEventService, InMemoryEventService>();
