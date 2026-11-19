@@ -4,12 +4,16 @@
 
 ## Сборка и запуск в Docker
 
-Запусти Docker Desktop в режиме Linux-контейнеров. Открой PowerShell в корне репозитория и запусти контейнер с .NET SDK из конфигурации Dev Container. Docker подключит исходники в `/workspace` и пробросит порт `5247` на Windows.
+Установи и запусти Docker на своей системе.
 
-```powershell
-$projectRoot = (Get-Location).Path
-$image = (Get-Content .devcontainer/devcontainer.json -Raw | ConvertFrom-Json).image
-docker run --rm -it --mount "type=bind,source=$projectRoot,target=/workspace" --workdir /workspace --publish 127.0.0.1:5247:5247 --entrypoint bash $image
+- **Windows.** Используй режим Linux-контейнеров и открой PowerShell. [Docker Desktop для Windows](https://docs.docker.com/desktop/setup/install/windows-install/)
+- **Ubuntu.** Запусти Docker Engine и открой терминал Bash. Если для доступа к Docker Engine нужны права администратора, используй `sudo docker` в командах ниже. [Docker Engine для Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+- **macOS.** Выбери установщик для Intel или Apple Silicon и открой терминал. [Docker Desktop для macOS](https://docs.docker.com/desktop/setup/install/mac-install/)
+
+Перейди в корень репозитория и проверь командой `docker version`, что доступен сервер Docker с Linux. Выполни одну и ту же команду в PowerShell, Bash или Zsh. Она использует образ из [конфигурации Dev Container](.devcontainer/devcontainer.json), подключает исходники в `/workspace` и публикует порт `5247` на хосте.
+
+```sh
+docker run --rm -it --mount "type=bind,source=$PWD,target=/workspace" --workdir /workspace --publish 127.0.0.1:5247:5247 --entrypoint bash mcr.microsoft.com/devcontainers/dotnet:1-10.0
 ```
 
 В открывшейся оболочке контейнера собери проект и запусти API в окружении `Development`, в котором доступны Swagger UI и OpenAPI. `dotnet build` также восстановит зависимости NuGet.
@@ -21,7 +25,7 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project EventApi.csproj --no-bui
 
 Если работаешь в VS Code, можно открыть проект командой **Dev Containers: Reopen in Container**, выполнить те же команды сборки и запуска во встроенном терминале и пробросить порт `5247` на вкладке **Ports**.
 
-Чтобы остановить API, нажми `Ctrl+C`. Если контейнер открыт из PowerShell, команда `exit` завершит его работу.
+Чтобы остановить API, нажми `Ctrl+C`. Если контейнер запущен командой `docker run`, введи в его оболочке `exit`.
 
 ## API
 
@@ -49,7 +53,7 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project EventApi.csproj --no-bui
 
 ## Проверка через Swagger UI
 
-Открой [Swagger UI](http://localhost:5247/swagger) в браузере после запуска API. Описание маршрутов доступно в [документе OpenAPI](http://localhost:5247/openapi/v1.json).
+Оставь API запущенным в контейнере и открой [Swagger UI](http://localhost:5247/swagger) в браузере на хосте. На Windows, Ubuntu и macOS адрес и шаги проверки одинаковые. Описание маршрутов доступно в [документе OpenAPI](http://localhost:5247/openapi/v1.json).
 
 1. Выбери `GET /events`, нажми **Try it out**, затем **Execute**. После первого запуска ожидается `200 OK` и пустой массив `[]`.
 2. В `POST /events` нажми **Try it out**, вставь JSON из примера и нажми **Execute**. Ожидается `201 Created`. Скопируй `id` из тела ответа.
