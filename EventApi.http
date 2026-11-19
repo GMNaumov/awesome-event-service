@@ -1,5 +1,16 @@
 @EventApi_HostAddress = http://localhost:5247
 
+# Swagger UI (Development)
+GET {{EventApi_HostAddress}}/swagger/index.html
+Accept: text/html
+
+###
+
+GET {{EventApi_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+
 GET {{EventApi_HostAddress}}/weatherforecast/
 Accept: application/json
 

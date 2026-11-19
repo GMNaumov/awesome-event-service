@@ -21,12 +21,17 @@ builder.Services.AddSingleton<IEventService, InMemoryEventService>();
 
 var app = builder.Build();
 
+app.UseHttpsRedirection();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-}
 
-app.UseHttpsRedirection();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "Event API v1");
+    });
+}
 
 var events = app.MapGroup("/events");
 
