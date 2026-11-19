@@ -11,16 +11,12 @@ Accept: application/json
 
 ###
 
-GET {{EventApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
-
 GET {{EventApi_HostAddress}}/events
 Accept: application/json
 
 ###
 
+# Ответ 201 содержит данные события с id. Заголовок Location указывает на созданное событие.
 # @name createEvent
 POST {{EventApi_HostAddress}}/events
 Content-Type: application/json
@@ -34,11 +30,18 @@ Content-Type: application/json
 
 ###
 
+# Список содержит созданное событие с теми же полями ответа.
+GET {{EventApi_HostAddress}}/events
+Accept: application/json
+
+###
+
 GET {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
 Accept: application/json
 
 ###
 
+# Ответ сохраняет id события и возвращает startAt в UTC (19:00:00Z).
 PUT {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
 Content-Type: application/json
 

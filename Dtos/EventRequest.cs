@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace EventApi.Models;
+namespace EventApi.Dtos;
 
 public class EventRequest : IValidatableObject
 {
@@ -34,12 +34,4 @@ public class EventRequest : IValidatableObject
             yield return new ValidationResult("EndAt must be later than StartAt.", [nameof(EndAt)]);
         }
     }
-
-    public Event ToEvent() => new()
-    {
-        Title = Title!,
-        Description = Description,
-        StartAt = StartAt!.Value.ToUniversalTime(),
-        EndAt = EndAt!.Value.ToUniversalTime()
-    };
 }

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using EventApi.Models;
+using EventApi.Dtos;
 using EventApi.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.OpenApi;
@@ -37,29 +37,31 @@ var events = app.MapGroup("/events");
 
 events.MapGet("", async (IEventService service, CancellationToken cancellationToken) =>
 {
-    return TypedResults.Ok(await service.GetAllAsync(cancellationToken));
+    var storedEvents = await service.GetAllAsync(cancellationToken);
+    return TypedResults.Ok(storedEvents.Select(EventMapping.ToResponse).ToArray());
 });
 
-events.MapGet("/{id:guid}", async Task<Results<Ok<Event>, NotFound>> (
+events.MapGet("/{id:guid}", async Task<Results<Ok<EventResponse>, NotFound>> (
     Guid id, IEventService service, CancellationToken cancellationToken) =>
 {
     var foundEvent = await service.GetByIdAsync(id, cancellationToken);
-    return foundEvent is null ? TypedResults.NotFound() : TypedResults.Ok(foundEvent);
+    return foundEvent is null ? TypedResults.NotFound() : TypedResults.Ok(foundEvent.ToResponse());
 })
 .WithName("GetEventById");
 
 events.MapPost("", async (EventRequest request, IEventService service, CancellationToken cancellationToken) =>
 {
     var createdEvent = await service.CreateAsync(request.ToEvent(), cancellationToken);
-    return TypedResults.CreatedAtRoute(createdEvent, "GetEventById", new { id = createdEvent.Id });
+    var response = createdEvent.ToResponse();
+    return TypedResults.CreatedAtRoute(response, "GetEventById", new { id = response.Id });
 })
 .ProducesValidationProblem();
 
-events.MapPut("/{id:guid}", async Task<Results<Ok<Event>, NotFound>> (
+events.MapPut("/{id:guid}", async Task<Results<Ok<EventResponse>, NotFound>> (
     Guid id, EventRequest request, IEventService service, CancellationToken cancellationToken) =>
 {
     var storedEvent = await service.UpdateAsync(id, request.ToEvent(), cancellationToken);
-    return storedEvent is null ? TypedResults.NotFound() : TypedResults.Ok(storedEvent);
+    return storedEvent is null ? TypedResults.NotFound() : TypedResults.Ok(storedEvent.ToResponse());
 })
 .ProducesValidationProblem();
 
@@ -70,28 +72,4 @@ events.MapDelete("/{id:guid}", async Task<Results<NoContent, NotFound>> (
     return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
 });
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

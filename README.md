@@ -38,7 +38,6 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project EventApi.csproj --no-bui
 | `GET /events/{id}` | Получить событие | `200 OK`, `404 Not Found` |
 | `PUT /events/{id}` | Обновить событие | `200 OK`, `400 Bad Request`, `404 Not Found` |
 | `DELETE /events/{id}` | Удалить событие | `204 No Content`, `404 Not Found` |
-| `GET /weatherforecast` | Получить демонстрационный прогноз погоды | `200 OK` |
 
 Для `POST` и `PUT` передай JSON с непустым `title`, датами `startAt` и `endAt` и необязательным `description`. Укажи `Z` или смещение UTC в обеих датах. Время окончания должно быть позже времени начала. В ответах даты возвращаются в UTC.
 
