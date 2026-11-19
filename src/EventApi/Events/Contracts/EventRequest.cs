@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace EventApi.Dtos;
+namespace EventApi.Events.Contracts;
 
 public class EventRequest
 {

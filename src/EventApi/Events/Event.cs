@@ -1,4 +1,4 @@
-namespace EventApi.Models;
+namespace EventApi.Events;
 
 public class Event
 {

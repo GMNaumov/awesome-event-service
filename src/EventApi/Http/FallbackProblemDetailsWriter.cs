@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Options;
 
-namespace EventApi.Errors;
+namespace EventApi.Http;
 
 internal sealed class FallbackProblemDetailsWriter(IOptions<ProblemDetailsOptions> options) : IProblemDetailsWriter
 {

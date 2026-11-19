@@ -1,4 +1,4 @@
-namespace EventApi.Dtos;
+namespace EventApi.Events.Contracts;
 
 public sealed class EventResponse
 {

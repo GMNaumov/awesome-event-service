@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using EventApi.Dtos;
-using EventApi.Models;
+using EventApi.Events.Contracts;
 
-namespace EventApi.Services;
+namespace EventApi.Events;
 
 public class InMemoryEventService : IEventService
 {
@@ -96,19 +95,19 @@ public class InMemoryEventService : IEventService
 
         if (request.StartAt is { Kind: DateTimeKind.Unspecified })
         {
-            errors[nameof(request.StartAt)] = ["StartAt must include Z or a UTC offset."];
+            errors[nameof(request.StartAt)] = ["Дата начала должна содержать информацию о часовом поясе."];
         }
 
         if (request.EndAt is { Kind: DateTimeKind.Unspecified })
         {
-            errors[nameof(request.EndAt)] = ["EndAt must include Z or a UTC offset."];
+            errors[nameof(request.EndAt)] = ["Дата окончания должна содержать информацию о часовом поясе."];
         }
 
         if (request.StartAt is { Kind: not DateTimeKind.Unspecified } startAt &&
             request.EndAt is { Kind: not DateTimeKind.Unspecified } endAt &&
             endAt.ToUniversalTime() <= startAt.ToUniversalTime())
         {
-            errors[nameof(request.EndAt)] = ["EndAt must be later than StartAt."];
+            errors[nameof(request.EndAt)] = ["Дата окончания должна быть позже даты начала."];
         }
 
         return errors;

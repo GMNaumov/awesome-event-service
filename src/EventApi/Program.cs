@@ -1,13 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using EventApi.Dtos;
-using EventApi.Endpoints;
-using EventApi.Errors;
-using EventApi.Services;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Http.Metadata;
-using Microsoft.Net.Http.Headers;
-using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,15 +22,15 @@ builder.Services.AddProblemDetails(options =>
         problem.Detail ??= problem.Status switch
         {
             StatusCodes.Status400BadRequest when problem is HttpValidationProblemDetails =>
-                "Correct the fields listed in errors.",
+                "Исправьте ошибки валидации.",
             StatusCodes.Status400BadRequest =>
-                "Send a non-null JSON object with values of the expected types.",
+                "Ожидается JSON-объект с значениями ожидаемых типов.",
             StatusCodes.Status404NotFound =>
-                "No endpoint matches the request path.",
+                "Событие с указанным идентификатором не найдено.",
             StatusCodes.Status405MethodNotAllowed =>
-                "Use one of the HTTP methods listed in the Allow header.",
+                "Используйте один из доступных методов HTTP.",
             StatusCodes.Status415UnsupportedMediaType =>
-                "Send a JSON request body with Content-Type: application/json and UTF-8 encoding.",
+                "Отправьте тело запроса в формате JSON с заголовком Content-Type: application/json и кодировкой UTF-8.",
             _ => null
         };
     };
@@ -77,7 +69,6 @@ app.Use(async (context, next) =>
             return;
         }
 
-        // The JSON body reader expects an unquoted encoding name.
         if (charset != contentType.Charset)
         {
             contentType.Charset = charset;

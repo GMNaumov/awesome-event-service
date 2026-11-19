@@ -1,6 +1,6 @@
-using EventApi.Dtos;
+using EventApi.Events.Contracts;
 
-namespace EventApi.Services;
+namespace EventApi.Events;
 
 public abstract record EventWriteResult
 {

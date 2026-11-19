@@ -1,9 +1,8 @@
 using System.Text.Json;
-using EventApi.Dtos;
-using EventApi.Services;
+using EventApi.Events.Contracts;
 using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace EventApi.Endpoints;
+namespace EventApi.Events;
 
 internal static class EventEndpoints
 {
@@ -54,7 +53,7 @@ internal static class EventEndpoints
             EventWriteResult.Saved(var response) =>
                 TypedResults.CreatedAtRoute(response, GetEventByIdRoute, new { id = response.Id }),
             EventWriteResult.Invalid(var errors) => ToValidationProblem(errors),
-            _ => throw new InvalidOperationException("Unexpected result when creating an event.")
+            _ => throw new InvalidOperationException("В процессе создания события произошла ошибка.")
         };
     }
 
@@ -67,7 +66,7 @@ internal static class EventEndpoints
             EventWriteResult.Saved(var response) => TypedResults.Ok(response),
             EventWriteResult.Invalid(var errors) => ToValidationProblem(errors),
             EventWriteResult.NotFound => EventNotFound(),
-            _ => throw new InvalidOperationException("Unexpected result when updating an event.")
+            _ => throw new InvalidOperationException("В процессе обновления события произошла ошибка.")
         };
     }
 
@@ -82,7 +81,7 @@ internal static class EventEndpoints
     {
         return TypedResults.Problem(
             statusCode: StatusCodes.Status404NotFound,
-            detail: "No event exists with the specified id.");
+            detail: "Событие с указанным идентификатором не найдено.");
     }
 
     private static ValidationProblem ToValidationProblem(Dictionary<string, string[]> errors)
