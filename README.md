@@ -34,9 +34,9 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project EventApi.csproj --no-bui
 | Метод и путь | Операция | Ответы |
 | --- | --- | --- |
 | `GET /events` | Получить список событий | `200 OK` |
-| `POST /events` | Создать событие | `201 Created`, `400 Bad Request` |
+| `POST /events` | Создать событие | `201 Created`, `400 Bad Request`, `415 Unsupported Media Type` |
 | `GET /events/{id}` | Получить событие | `200 OK`, `404 Not Found` |
-| `PUT /events/{id}` | Обновить событие | `200 OK`, `400 Bad Request`, `404 Not Found` |
+| `PUT /events/{id}` | Обновить событие | `200 OK`, `400 Bad Request`, `404 Not Found`, `415 Unsupported Media Type` |
 | `DELETE /events/{id}` | Удалить событие | `204 No Content`, `404 Not Found` |
 
 Для `POST` и `PUT` передай JSON с непустым `title`, датами `startAt` и `endAt` и необязательным `description`. Укажи `Z` или смещение UTC в обеих датах. Время окончания должно быть позже времени начала. В ответах даты возвращаются в UTC.
@@ -49,6 +49,10 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project EventApi.csproj --no-bui
   "endAt": "2026-12-01T19:00:00Z"
 }
 ```
+
+## Ошибки API
+
+API возвращает ошибки в формате Problem Details (`application/problem+json`). Поля `type`, `title` и `status` описывают ошибку, а `traceId` помогает найти запрос в журналах. Ошибки валидации содержат словарь `errors` с сообщениями по полям. Синтаксически некорректный JSON также возвращает `400 Bad Request`. При необработанном исключении клиент получает `500 Internal Server Error`, а подробности исключения записываются в журнал приложения.
 
 ## Проверка через Swagger UI
 

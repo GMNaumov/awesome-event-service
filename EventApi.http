@@ -54,9 +54,10 @@ Content-Type: application/json
 
 ###
 
-# Без обязательных полей ожидается HTTP 400 с ошибками Title, StartAt и EndAt.
+# Без обязательных полей ожидается HTTP 400 Problem Details с полями Title, StartAt и EndAt в errors.
 POST {{EventApi_HostAddress}}/events
 Content-Type: application/json
+Accept: application/problem+json
 
 {}
 
@@ -102,6 +103,30 @@ DELETE {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
 
 ###
 
-# После удаления ожидается HTTP 404.
+# После удаления ожидается HTTP 404 Problem Details с полем traceId.
 GET {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
-Accept: application/json
+Accept: application/problem+json
+
+###
+
+# Некорректный JSON возвращает HTTP 400 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+Accept: application/problem+json
+
+{"title":
+
+###
+
+# Неподдерживаемый тип тела запроса возвращает HTTP 415 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: text/plain
+Accept: application/problem+json
+
+C# meetup
+
+###
+
+# Неизвестный маршрут возвращает HTTP 404 Problem Details, в том числе при Accept: text/html.
+GET {{EventApi_HostAddress}}/events/unknown-route
+Accept: text/html
