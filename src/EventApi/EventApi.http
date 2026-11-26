@@ -1,0 +1,185 @@
+@EventApi_HostAddress = http://localhost:5247
+
+# Swagger UI (Development)
+GET {{EventApi_HostAddress}}/swagger/index.html
+Accept: text/html
+
+###
+
+GET {{EventApi_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+
+GET {{EventApi_HostAddress}}/events
+Accept: application/json
+
+###
+
+# Ответ 201 содержит данные события с id. Заголовок Location указывает на созданное событие.
+# @name createEvent
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+{
+  "title": "C# meetup",
+  "description": "Meet other C# developers",
+  "startAt": "2026-12-01T18:00:00Z",
+  "endAt": "2026-12-01T19:00:00Z"
+}
+
+###
+
+# Список содержит созданное событие с теми же полями ответа.
+GET {{EventApi_HostAddress}}/events
+Accept: application/json
+
+###
+
+GET {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Accept: application/json
+
+###
+
+# Ответ сохраняет id события и возвращает startAt в UTC (19:00:00Z).
+PUT {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "title": "ASP.NET Core meetup",
+  "description": "Build a Minimal API",
+  "startAt": "2026-12-02T22:00:00+03:00",
+  "endAt": "2026-12-02T20:30:00Z"
+}
+
+###
+
+# Без обязательных полей ожидается HTTP 400 с ключами title, startAt и endAt в errors.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+Accept: application/problem+json
+
+{}
+
+###
+
+# При совпадении дат ожидается HTTP 400 с ошибкой endAt.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+{
+  "title": "C# meetup",
+  "startAt": "2026-12-01T18:00:00Z",
+  "endAt": "2026-12-01T18:00:00Z"
+}
+
+###
+
+# Проверка нескольких полей сразу. Ожидается HTTP 400 с ошибками title и startAt.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+Accept: text/html
+
+{
+  "title": " ",
+  "startAt": "2026-12-01T18:00:00",
+  "endAt": "2026-12-01T19:00:00Z"
+}
+
+###
+
+# При окончании раньше начала ожидается HTTP 400 с ошибкой endAt.
+PUT {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "title": "ASP.NET Core meetup",
+  "startAt": "2026-12-02T19:00:00Z",
+  "endAt": "2026-12-02T18:00:00Z"
+}
+
+###
+
+DELETE {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+
+###
+
+# После удаления ожидается HTTP 404 Problem Details. Поле detail сообщает об отсутствии события.
+GET {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Accept: application/problem+json
+
+###
+
+# Корректный PUT после удаления возвращает HTTP 404.
+PUT {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "title": "C# meetup",
+  "startAt": "2026-12-01T18:00:00Z",
+  "endAt": "2026-12-01T19:00:00Z"
+}
+
+###
+
+# Повторное удаление возвращает HTTP 404.
+DELETE {{EventApi_HostAddress}}/events/{{createEvent.response.body.$.id}}
+
+###
+
+# Некорректный JSON возвращает HTTP 400 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+Accept: application/problem+json
+
+{"title":
+
+###
+
+# Пустое тело возвращает HTTP 400 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+###
+
+# JSON null возвращает HTTP 400 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json
+
+null
+
+###
+
+# Неподдерживаемый тип тела запроса возвращает HTTP 415 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: text/plain
+Accept: application/problem+json
+
+C# meetup
+
+###
+
+# Неизвестная кодировка возвращает HTTP 415 Problem Details.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json; charset=unknown
+
+{}
+
+###
+
+# Кодировка UTF-8 в кавычках распознаётся. Ответ HTTP 400 содержит ошибки обязательных полей.
+POST {{EventApi_HostAddress}}/events
+Content-Type: application/json; charset="utf-8"
+
+{}
+
+###
+
+# Неподдерживаемый метод возвращает HTTP 405 Problem Details и заголовок Allow с GET и POST.
+PATCH {{EventApi_HostAddress}}/events
+
+###
+
+# Путь с id вне формата GUID возвращает HTTP 404. Поле detail сообщает об отсутствии маршрута.
+GET {{EventApi_HostAddress}}/events/unknown-route
+Accept: text/html
